@@ -20,22 +20,22 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             name: linux-x86_64
             nix-package: default
-            binary: whisper-mcp-server
+            binary: llama-mcp-server
             os: ubuntu-latest
           - target: x86_64-unknown-linux-musl
             name: linux-x86_64-musl
             nix-package: musl
-            binary: whisper-mcp-server
+            binary: llama-mcp-server
             os: ubuntu-latest
           - target: x86_64-apple-darwin
             name: macos-x86_64
             nix-package: default
-            binary: whisper-mcp-server
+            binary: llama-mcp-server
             os: macos-14
           - target: aarch64-apple-darwin
             name: macos-arm64
             nix-package: default
-            binary: whisper-mcp-server
+            binary: llama-mcp-server
             os: macos-14
     runs-on: ${{ matrix.os }}
 
@@ -93,14 +93,14 @@ jobs:
       - name: Prepare artifacts
         run: |
           mkdir -p artifacts
-          cp result/bin/whisper-mcp-server artifacts/whisper-mcp-server
-          chmod +x artifacts/whisper-mcp-server
+          cp result/bin/llama-mcp-server artifacts/llama-mcp-server
+          chmod +x artifacts/llama-mcp-server
 
           cd artifacts
           if command -v sha256sum >/dev/null 2>&1; then
-            sha256sum whisper-mcp-server > whisper-mcp-server.sha256
+            sha256sum llama-mcp-server > llama-mcp-server.sha256
           elif command -v shasum >/dev/null 2>&1; then
-            shasum -a 256 whisper-mcp-server > whisper-mcp-server.sha256
+            shasum -a 256 llama-mcp-server > llama-mcp-server.sha256
           else
             echo "No SHA256 utility found" >&2
             exit 1
@@ -109,7 +109,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: whisper-mcp-server-${{ matrix.name }}
+          name: llama-mcp-server-${{ matrix.name }}
           path: artifacts/
           retention-days: 30
 
@@ -146,21 +146,19 @@ jobs:
 
       - name: Build binary
         run: cargo build --release
-        env:
-          CMAKE_POLICY_VERSION_MINIMUM: "3.5"
 
       - name: Prepare artifacts
         shell: bash
         run: |
           mkdir -p artifacts
-          cp target/release/whisper-mcp-server.exe artifacts/
+          cp target/release/llama-mcp-server.exe artifacts/
           cd artifacts
-          sha256sum whisper-mcp-server.exe > whisper-mcp-server.exe.sha256
+          sha256sum llama-mcp-server.exe > llama-mcp-server.exe.sha256
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: whisper-mcp-server-windows-x86_64
+          name: llama-mcp-server-windows-x86_64
           path: artifacts/
           retention-days: 30
 
@@ -181,7 +179,7 @@ jobs:
           non-cuda-sub-packages: '["libcublas-dev"]'
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y cmake libclang-dev libopus-dev
+        run: sudo apt-get update && sudo apt-get install -y cmake libclang-dev
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -211,16 +209,16 @@ jobs:
       - name: Prepare artifacts
         run: |
           mkdir -p artifacts
-          cp target/release/whisper-mcp-server artifacts/whisper-mcp-server
-          chmod +x artifacts/whisper-mcp-server
+          cp target/release/llama-mcp-server artifacts/llama-mcp-server
+          chmod +x artifacts/llama-mcp-server
 
           cd artifacts
-          sha256sum whisper-mcp-server > whisper-mcp-server.sha256
+          sha256sum llama-mcp-server > llama-mcp-server.sha256
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: whisper-mcp-server-linux-x86_64-cuda
+          name: llama-mcp-server-linux-x86_64-cuda
           path: artifacts/
           retention-days: 30
 
@@ -241,7 +239,7 @@ jobs:
           mkdir -p release
 
           cd release-artifacts
-          for artifact_dir in whisper-mcp-server-*/; do
+          for artifact_dir in llama-mcp-server-*/; do
             platform=$(basename "$artifact_dir")
             echo "Creating archive for $platform..."
 
@@ -249,7 +247,7 @@ jobs:
             if [[ "$platform" == *"windows"* ]]; then
               zip -r "../../release/${platform}.zip" *
             else
-              chmod +x whisper-mcp-server 2>/dev/null || true
+              chmod +x llama-mcp-server 2>/dev/null || true
               tar -czf "../../release/${platform}.tar.gz" *
             fi
             cd ..
@@ -273,7 +271,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y cmake libclang-dev libopus-dev
+        run: sudo apt-get update && sudo apt-get install -y cmake libclang-dev
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable

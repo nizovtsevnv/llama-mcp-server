@@ -1,0 +1,29 @@
+[package]
+name = "llama-mcp-server"
+version = "0.1.1"
+edition = "2021"
+description = "Local LLM inference MCP server powered by llama.cpp"
+license = "MIT"
+repository = "https://github.com/nizovtsevnv/llama-mcp-server"
+exclude = [".cargo/", ".claude/", ".github/", ".envrc", "AGENTS.md", "flake.nix", "flake.lock", "scripts/"]
+
+[features]
+cuda = ["llama-cpp-2/cuda"]
+
+[dependencies]
+llama-cpp-2 = { version = "0.1", features = ["sampler"] }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+uuid = { version = "1", features = ["v4"] }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+opt-level = "z"

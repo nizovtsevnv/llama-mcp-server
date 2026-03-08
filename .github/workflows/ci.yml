@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  check:
+    name: Check & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+            max-jobs = auto
+            cores = 0
+
+      - name: Setup Nix cache
+        uses: cachix/cachix-action@v15
+        with:
+          name: nix-community
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        continue-on-error: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target/
+          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-target-
+
+      - name: Check code formatting
+        run: nix develop -c cargo fmt --all --check
+
+      - name: Run clippy
+        run: nix develop -c cargo clippy --all-targets -- -D warnings
+
+      - name: Run tests
+        run: nix develop -c cargo test --verbose
+
+  build-smoke-test:
+    name: Build Smoke Test
+    runs-on: ubuntu-latest
+    needs: check
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: Setup Nix cache
+        uses: cachix/cachix-action@v15
+        with:
+          name: nix-community
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        continue-on-error: true
+
+      - name: Verify cargoHash and build
+        run: |
+          echo "Verifying cargoHash is up to date..."
+          if ! nix build 2>/dev/null; then
+            echo "cargoHash in flake.nix is outdated!"
+            echo ""
+            echo "To fix this:"
+            echo "1. Run locally: ./scripts/update-cargo-hash.sh"
+            echo "2. Commit the updated flake.nix"
+            echo "3. Push the changes"
+            exit 1
+          fi
+
+          echo "cargoHash is up to date"
+          echo "Native build successful"
+
+          if [[ -x result/bin/llama-mcp-server ]]; then
+            echo "Binary is executable"
+            result/bin/llama-mcp-server --help || echo "Help command may require args"
+          fi
