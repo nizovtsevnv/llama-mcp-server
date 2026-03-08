@@ -23,7 +23,7 @@
         pname = cargoToml.package.name;
         version = cargoToml.package.version;
 
-        cargoHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+        cargoHash = "sha256-Sf4AVCXPEJR+EktVMiLrYndr2vhuWculRVaYggIsA0w=";
 
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
           targets = [
@@ -41,6 +41,7 @@
 
         commonEnv = {
           LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+          BINDGEN_EXTRA_CLANG_ARGS = "-I${pkgs.glibc.dev}/include -I${pkgs.llvmPackages.libclang.lib}/lib/clang/${pkgs.llvmPackages.libclang.version}/include";
         };
       in {
         devShells.default = pkgs.mkShell {
