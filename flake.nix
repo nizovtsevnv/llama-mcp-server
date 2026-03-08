@@ -41,6 +41,7 @@
 
         commonEnv = {
           LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+        } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           BINDGEN_EXTRA_CLANG_ARGS = "-I${pkgs.glibc.dev}/include -I${pkgs.llvmPackages.libclang.lib}/lib/clang/${pkgs.llvmPackages.libclang.version}/include";
         };
       in {
