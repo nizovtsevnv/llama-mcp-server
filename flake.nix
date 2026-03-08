@@ -114,7 +114,8 @@ HOOK
               echo "INPUT(${gccLib}/libstdc++.a)" > $OVERRIDE/libstdc++.so.6
               echo "INPUT(${gccLib}/libgcc_s.a)"  > $OVERRIDE/libgcc_s.so
               echo "INPUT(${gccLib}/libgcc_s.a)"  > $OVERRIDE/libgcc_s.so.1
-              export CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-C target-feature=+crt-static -C relocation-model=static -C link-args=-L$OVERRIDE -C link-args=-lc"
+              echo "INPUT(${gccLib}/libgomp.a)"   > $OVERRIDE/libgomp.so
+              export CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-C target-feature=+crt-static -C relocation-model=static -C link-args=-L$OVERRIDE -C link-args=-lgomp -C link-args=-lc"
             '';
 
             meta = with pkgs.lib; {
